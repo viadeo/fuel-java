@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.exacttarget</groupId>
   <artifactId>fuel-java</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.2-6-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Fuel Java SDK</name>
   <url>http://code.exacttarget.com</url>
@@ -224,4 +224,16 @@
       </plugins>
     </pluginManagement>
   </build>
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>viadeo-releases</name>
+            <url>https://nexus.viadeobackoffice.com/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>viadeo-snapshots</name>
+            <url>https://nexus.viadeobackoffice.com/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
