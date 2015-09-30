@@ -1,0 +1,25 @@
+<schema elementFormDefault="qualified" 
+        xmlns="http://www.w3.org/2001/XMLSchema" 
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+        xmlns:tns="urn:fault.partner.exacttarget.com" 
+        targetNamespace="urn:fault.partner.exacttarget.com" 
+        version="1.0">
+
+  <element name="apifault" type="tns:APIFault" />
+  
+  <complexType name="APIFault">
+    <sequence>
+      <element name="Code" type="xsd:int" minOccurs="1" maxOccurs="1" />
+      <element name="Message" type="xsd:string" minOccurs="1" maxOccurs="1" />
+      <element name="LogID" type="xsd:long" minOccurs="0" maxOccurs="1" />
+      <element name="Params" minOccurs="0" maxOccurs="1">
+        <complexType>
+          <sequence>
+            <element name="Param" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+          </sequence>
+        </complexType>
+      </element>
+    </sequence>
+  </complexType>
+
+</schema>

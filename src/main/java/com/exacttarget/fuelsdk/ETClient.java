@@ -34,6 +34,7 @@
 
 package com.exacttarget.fuelsdk;
 
+import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -55,7 +56,7 @@ import org.apache.log4j.Logger;
  * client library.
  */
 
-public class ETClient {
+public class ETClient implements Closeable {
     private static Logger logger = Logger.getLogger(ETClient.class);
 
     private static final String DEFAULT_PROPERTIES_FILE_NAME =
@@ -251,7 +252,7 @@ public class ETClient {
             return null;
         }
 
-        logger.debug("requesting access token...");
+        logger.info("requesting access token...");
 
         //
         // Construct the JSON payload. Set accessType to offline so
@@ -294,21 +295,21 @@ public class ETClient {
 
         JsonParser jsonParser = new JsonParser();
         jsonObject = jsonParser.parse(responsePayload).getAsJsonObject();
-        logger.debug("received token:");
+        logger.info("received token:");
         this.accessToken = jsonObject.get("accessToken").getAsString();
-        logger.debug("  accessToken: " + this.accessToken);
+        logger.info("  accessToken: " + this.accessToken);
         this.expiresIn = jsonObject.get("expiresIn").getAsInt();
-        logger.debug("  expiresIn: " + this.expiresIn);
+        logger.info("  expiresIn: " + this.expiresIn);
         JsonElement jsonElement = jsonObject.get("legacyToken");
         if (jsonElement != null) {
             this.legacyToken = jsonElement.getAsString();
         }
-        logger.debug("  legacyToken: " + this.legacyToken);
+        logger.info("  legacyToken: " + this.legacyToken);
         if (jsonObject.get("refreshToken") != null){
         	this.refreshToken = jsonObject.get("refreshToken").getAsString();
         }
         
-        logger.debug("  refreshToken: " + this.refreshToken);
+        logger.info("  refreshToken: " + this.refreshToken);
 
         //
         // Calculate the token expiration time. As before,
@@ -318,7 +319,7 @@ public class ETClient {
 
         tokenExpirationTime = System.currentTimeMillis() + (expiresIn * 1000);
 
-        logger.debug("access token expires at " + new Date(tokenExpirationTime));
+        logger.warn("access token expires at " + new Date(tokenExpirationTime));
 
         return accessToken;
     }
@@ -327,7 +328,7 @@ public class ETClient {
         throws ETSdkException
     {
         if (tokenExpirationTime > 0) {
-            logger.debug("access token expires at " + new Date(tokenExpirationTime));
+            logger.info("access token expires at " + new Date(tokenExpirationTime));
 
             //
             // If the current token expires more than five
@@ -337,11 +338,11 @@ public class ETClient {
             //
 
             if (tokenExpirationTime - System.currentTimeMillis() > 5*60*1000) {
-                logger.debug("not refreshing access token");
+                logger.info("not refreshing access token");
                 return accessToken;
             }
 
-            logger.debug("refreshing access token...");
+            logger.info("refreshing access token...");
 
             if (refreshToken == null) {
                 throw new ETSdkException("refreshToken == null");
@@ -789,5 +790,11 @@ public class ETClient {
         }
 
         return response;
+    }
+
+    public void close() {
+        if (soapConnection != null) {
+            soapConnection.close();
+        }
     }
 }

@@ -64,14 +64,12 @@ public class ETRestConnection {
     private boolean isAuthConnection = false;
 
     public ETRestConnection(ETClient client, String endpoint)
-        throws ETSdkException
-    {
+            throws ETSdkException {
         this(client, endpoint, false);
     }
 
     public ETRestConnection(ETClient client, String endpoint, boolean isAuthConnection)
-        throws ETSdkException
-    {
+            throws ETSdkException {
         this.client = client;
 
         this.endpoint = endpoint;
@@ -170,8 +168,7 @@ public class ETRestConnection {
     private final static int URL_MAX_LENGTH = 2048;
 
     private HttpURLConnection sendRequest(String path, Method method)
-        throws ETSdkException
-    {
+            throws ETSdkException {
         if (path.length() > URL_MAX_LENGTH) {
             throw new ETSdkException(path + ": URL too long");
         }
@@ -179,9 +176,8 @@ public class ETRestConnection {
     }
 
     private HttpURLConnection sendRequest(String path, Method method, String payload)
-        throws ETSdkException
-    {
-        URL url = null;
+            throws ETSdkException {
+        URL url;
         try {
             url = new URL(endpoint + path);
         } catch (MalformedURLException ex) {
@@ -191,13 +187,12 @@ public class ETRestConnection {
     }
 
     private HttpURLConnection sendRequest(URL url, Method method, String payload)
-        throws ETSdkException
-    {
+            throws ETSdkException {
         Gson gson = client.getGson();
 
         logger.debug(method + " " + url);
 
-        HttpURLConnection connection = null;
+        HttpURLConnection connection;
         try {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(method.toString());
@@ -207,19 +202,19 @@ public class ETRestConnection {
             throw new ETSdkException("error opening " + url, ex);
         }
 
-        switch(method) {
-          case GET:
-            connection.setDoInput(true);
-            connection.setRequestProperty("Accept", "application/json");
-            break;
-          case POST:
-          case PATCH:
-          case DELETE:
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/json");
-            break;
-          default:
-            throw new ETSdkException("unsupported request method: " + method.toString());
+        switch (method) {
+            case GET:
+                connection.setDoInput(true);
+                connection.setRequestProperty("Accept", "application/json");
+                break;
+            case POST:
+            case PATCH:
+            case DELETE:
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Content-Type", "application/json");
+                break;
+            default:
+                throw new ETSdkException("unsupported request method: " + method.toString());
         }
 
         if (!isAuthConnection) {
@@ -269,49 +264,57 @@ public class ETRestConnection {
     }
 
     private String receiveResponse(HttpURLConnection connection)
-        throws ETSdkException
-    {
+            throws ETSdkException {
         Gson gson = client.getGson();
 
         InputStream is = null;
         try {
-            if (connection.getResponseCode() < 400) {
-                is = connection.getInputStream();
-            } else {
-                is = connection.getErrorStream();
-            }
-        } catch (IOException ex) {
-            throw new ETSdkException("error opening " + connection.getURL(), ex);
-        }
-
-        StringBuilder stringBuilder = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        try {
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-        } catch (IOException ex) {
-            throw new ETSdkException("error reading " + connection.getURL(), ex);
-        } finally {
             try {
-                reader.close();
+                if (connection.getResponseCode() < 400) {
+                    is = connection.getInputStream();
+                } else {
+                    is = connection.getErrorStream();
+                }
             } catch (IOException ex) {
-                throw new ETSdkException("error closing " + connection.getURL(), ex);
+                throw new ETSdkException("error opening " + connection.getURL(), ex);
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            try {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+            } catch (IOException ex) {
+                throw new ETSdkException("error reading " + connection.getURL(), ex);
+            } finally {
+                try {
+                    reader.close();
+                } catch (IOException ex) {
+                    logger.error("error closing " + connection.getURL(), ex);
+                }
+            }
+
+            String response = stringBuilder.toString();
+
+            if (logger.isDebugEnabled()) {
+                JsonParser jsonParser = new JsonParser();
+                String responsePrettyPrinted = gson.toJson(jsonParser.parse(response));
+                for (String line : responsePrettyPrinted.split("\\n")) {
+                    logger.debug(line);
+                }
+            }
+            return response;
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    logger.warn("", e);
+                }
             }
         }
-
-        String response = stringBuilder.toString();
-
-        if (logger.isDebugEnabled()) {
-            JsonParser jsonParser = new JsonParser();
-            String responsePrettyPrinted = gson.toJson(jsonParser.parse(response));
-            for (String line : responsePrettyPrinted.split("\\n")) {
-                logger.debug(line);
-            }
-        }
-
-        return response;
     }
 
     public enum Method {
