@@ -34,6 +34,7 @@
 
 package com.exacttarget.fuelsdk;
 
+import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -55,7 +56,7 @@ import org.apache.log4j.Logger;
  * client library.
  */
 
-public class ETClient {
+public class ETClient implements Closeable {
     private static Logger logger = Logger.getLogger(ETClient.class);
 
     private static final String DEFAULT_PROPERTIES_FILE_NAME =
@@ -786,5 +787,11 @@ public class ETClient {
         }
 
         return response;
+    }
+
+    public void close() {
+        if (soapConnection != null) {
+            soapConnection.close();
+        }
     }
 }
