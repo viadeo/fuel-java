@@ -107,7 +107,7 @@ public class ETDataExtensionColumn extends ETSoapObject {
     }
 
     public void setName(String name) {
-        this.name = name.toLowerCase();
+        this.name = name;
     }
 
     public String getDescription() {
